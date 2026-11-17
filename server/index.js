@@ -34,7 +34,7 @@ export async function createApp(options={}){
    if(path.startsWith('/uploads/')&&db.remote){const name=path.slice(9);if(!/^[a-f0-9-]+\.(jpg|png|webp)$/.test(name))throw new HttpError(404,'N?o encontrado.');const upload=await db.getUpload(name);if(!upload)throw new HttpError(404,'N?o encontrado.');res.writeHead(200,{'Content-Type':upload.type});res.end(req.method==='HEAD'?undefined:upload.bytes);return;}
    let file;
    if(['/', '/admin','/admin/'].includes(path)||/^\/convite\/[-a-z0-9]+$/.test(path)||/^\/obrigado\/[A-Za-z0-9_-]+$/.test(path))file=join(ROOT,'site.html');
-   else if(['/app.js','/admin.js','/guest-features.js'].includes(path))file=join(ROOT,path.slice(1));
+   else if(['/app.js','/admin.js','/guest-features.js','/styles.css'].includes(path))file=join(ROOT,path.slice(1));
    else if(path.startsWith('/imagens/')||path.startsWith('/uploads/')){const base=path.startsWith('/uploads/')?join(directory,'uploads'):join(ROOT,'imagens');const sub=decodeURIComponent(path.slice(path.startsWith('/uploads/')?9:9));file=resolve(base,sub);const rel=relative(base,file);if(rel.startsWith('..')||isAbsolute(rel)||!['.jpg','.jpeg','.png','.webp'].includes(extname(file).toLowerCase()))throw new HttpError(404,'Não encontrado.');}
    else throw new HttpError(404,'Não encontrado.');
    const bytes=await readFile(file);res.writeHead(200,{'Content-Type':types[extname(file).toLowerCase()]||'application/octet-stream'});res.end(req.method==='HEAD'?undefined:bytes);

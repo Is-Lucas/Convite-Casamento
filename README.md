@@ -1,20 +1,30 @@
-﻿# Luisa & Gabriel
+# Luisa & Gabriel
 
-Convite original com jardim secreto e abertura preservados. Backend Node.js 24+ com SQLite real; painel com usuário/senha; convidados nominais, RSVP por lugares e presentes por links do Mercado Pago com conferência manual.
+Site do nosso casamento, em 10 de abril de 2027.
+
+Convites individuais, confirma??o de presen?a e lista de presentes. O painel permite administrar convidados, pagamentos e at? tr?s acessos dos noivos.
+
+## Executar
+
+Requer Node.js 24 ou superior.
 
 ```sh
+npm ci
 npm start
 ```
 
-Convite: http://localhost:4173 · Painel: http://localhost:4173/admin
+- Convite: http://localhost:4173
+- Painel: http://localhost:4173/admin
 
-Primeiro acesso local: código em `data/setup-key.txt`; escolha seu usuário e senha no painel. Produção: código na variável secreta `SETUP_KEY`.
+No primeiro acesso local, consulte `data/setup-key.txt` e cadastre um usu?rio e senha.
 
-Instruções completas de primeiro acesso, publicação, Mercado Pago e backup: [CONFIGURACAO.md](CONFIGURACAO.md).
+## Verificar
 
 ```sh
 npm run build
 npm test
 ```
 
-Nenhuma credencial deve ser incluída no repositório. A aplicação ainda não foi publicada online.
+O banco local ? SQLite. Para PostgreSQL, configure `DATABASE_URL` no servidor; a conex?o pode ser a do Supabase. Senhas, banco local e vari?veis privadas n?o entram no reposit?rio.
+
+Instru??es de configura??o, hospedagem e backup em [CONFIGURACAO.md](CONFIGURACAO.md).

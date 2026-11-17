@@ -9,13 +9,4 @@ node_modules
 qa
 entrega
 dist
-worker
-.openai
 *.log
-*-photos.mjs
-secret-garden.mjs
-personalize-panel.mjs
-integrate-functions.mjs
-simplify-invitation.mjs
-fix-envelope.mjs
-update-florals.mjs

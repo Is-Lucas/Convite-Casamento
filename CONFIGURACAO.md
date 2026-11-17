@@ -16,7 +16,8 @@ Node.js 24 ou superior, sem dependências externas; SQLite nativo do Node; HTML/
 
 | Arquivo | Função |
 | --- | --- |
-| `site.html` | Visual original, abertura e estilos dos novos campos |
+| `site.html` | Estrutura do convite e abertura |
+| `styles.css` | Estilos e adapta??o para celular |
 | `app.js` | Convite, fotos, música e animações |
 | `guest-features.js` | Convites nominais, RSVP e fluxo de presentes |
 | `admin.js` | Login e painel dos noivos |
