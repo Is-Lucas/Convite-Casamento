@@ -1,0 +1,7 @@
+Coloque aqui as fotos de Luisa e Gabriel (JPG, PNG ou WebP).
+
+Nomeie a foto do topo como 01-topo.jpg (ou .png / .webp).
+As demais podem ser 02.jpg, 03.jpg, 04.jpg...
+Todas aparecem na galeria Nossa história.
+
+Depois de copiar, atualize a prévia no navegador com Ctrl + F5.

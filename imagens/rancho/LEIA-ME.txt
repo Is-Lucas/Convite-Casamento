@@ -1,0 +1,7 @@
+Coloque aqui somente fotos do ambiente do Rancho Sempre Viva.
+
+01-entrada.jpg será a imagem da animação de entrada.
+As demais imagens formarão a seção do local.
+Formatos aceitos: JPG, JPEG, PNG e WebP.
+
+Depois de copiar, atualize a prévia no navegador com Ctrl + F5.

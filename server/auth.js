@@ -1,0 +1,8 @@
+import { randomBytes,scryptSync,timingSafeEqual,createHash } from 'node:crypto';
+export const digest=s=>createHash('sha256').update(s).digest('hex');
+export function hashPassword(password){const salt=randomBytes(16).toString('hex');return salt+':'+scryptSync(password,salt,64).toString('hex')}
+export function checkPassword(password,hash){try{const [salt,value]=hash.split(':');const actual=scryptSync(password,salt,64);const stored=Buffer.from(value,'hex');return actual.length===stored.length&&timingSafeEqual(actual,stored)}catch{return false}}
+export function cookieToken(req){const cookie=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('wedding_session='));return cookie?cookie.slice(16):''}
+export async function isAdmin(db,req){return !!(await db.prepare('SELECT hash FROM sessions WHERE hash=? AND expires>?').get(digest(cookieToken(req)),Date.now()))}
+export async function createSession(db,res,secure){const token=randomBytes(32).toString('base64url');(await db.prepare('DELETE FROM sessions WHERE expires<?').run(Date.now()));(await db.prepare('INSERT INTO sessions VALUES(?,?)').run(digest(token),Date.now()+12*3600000));res.setHeader('Set-Cookie',`wedding_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=43200${secure?'; Secure':''}`)}
+export async function limited(db,key,max=10,period=15*60000){const now=Date.now();(await db.prepare('DELETE FROM attempts WHERE expires<?').run(now));(await db.prepare('INSERT INTO attempts VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=attempts.count+1').run(key,now+period));return (await db.prepare('SELECT count FROM attempts WHERE key=?').get(key)).count>max}

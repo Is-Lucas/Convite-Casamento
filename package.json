@@ -1,0 +1,23 @@
+{
+  "name": "convite-luisa-gabriel",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --env-file-if-exists=.env server/index.js",
+    "test": "node --test --test-isolation=none tests/*.test.js",
+    "validate": "node --check app.js && node --check admin.js && node --check guest-features.js && node --check server/index.js",
+    "build": "node scripts/check-build.mjs",
+    "reset-password": "node --env-file-if-exists=.env scripts/admin-password.mjs",
+    "backup": "node --env-file-if-exists=.env scripts/backup.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16"
+  }
+}

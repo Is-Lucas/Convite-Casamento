@@ -1,0 +1,50 @@
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createApp} from '../server/index.js';
+import {parseCsv} from '../admin.js';
+
+test('CSV preserves quoted names, newlines and escaped quotes',()=>{assert.deepEqual(parseCsv('nome;lugares;telefone\r\n"Maria; Silva";4;5511999999999\r\n"Luisa ""Lulu""";2;'),[['nome','lugares','telefone'],['Maria; Silva','4','5511999999999'],['Luisa "Lulu"','2','']]);assert.throws(()=>parseCsv('nome;lugares\n"Maria;2'))});
+
+test('SQLite, authentication, personalized RSVP, gifts and persistence',async t=>{
+ const directory=await mkdtemp(join(tmpdir(),'wedding-test-'));const env={SETUP_KEY:'test-key-not-a-production-secret'};let app=await createApp({directory,root:directory,env});
+ await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));let base='http://127.0.0.1:'+app.server.address().port;let cookie='';
+ t.after(async()=>{await new Promise(r=>app.server.close(r));app.db.close();await rm(directory,{recursive:true,force:true})});
+ async function call(path,body,method,auth=true,origin=base){const r=await fetch(base+'/api/'+path,{method:method||(body?'POST':'GET'),headers:{...(body?{'Content-Type':'application/json'}:{}),Origin:origin,...(auth&&cookie?{Cookie:cookie}:{})},...(body?{body:JSON.stringify(body)}:{})});const data=await r.json();if(r.headers.get('set-cookie'))cookie=r.headers.get('set-cookie').split(';')[0];return {status:r.status,data}}
+ assert.equal((await call('admin')).status,401);
+ assert.equal((await fetch(base+'/api/admin',{headers:{'oai-authenticated-user-email':'preview@localhost'}})).status,401);
+ assert.equal((await call('auth/setup',{setupKey:'bad',username:'noivos',password:'senha-segura-teste'})).status,403);
+ assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'noivos',password:'senha-segura-teste'},undefined,true,'https://evil.example')).status,403);
+ assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'noivos',password:'senha-segura-teste'})).status,200);
+ assert.ok(cookie.startsWith('wedding_session='));
+ assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'other',password:'senha-segura-teste'})).status,409);
+ const guest=(await call('admin/guests',{name:'Maria e família',seats:4,phone:'5511999999999'})).data;assert.ok(/^maria-e-familia-[a-f0-9]{20}$/.test(guest.slug));
+ assert.equal((await call('guest/'+guest.slug,undefined,undefined,false)).data.name,'Maria e família');assert.equal((await call('guest/inexistente')).data,null);
+ assert.equal((await call('rsvp',{slug:guest.slug,answer:'yes',people:5,note:''},undefined,false)).status,400);
+ assert.equal((await call('rsvp',{slug:guest.slug,answer:'yes',people:2,note:'Sem glúten',name:'Outro nome'},undefined,false)).status,200);
+ let received=(await call('guest/'+guest.slug,undefined,undefined,false)).data;assert.equal(received.response.people,2);assert.equal(received.response.note,'Sem glúten');
+ assert.equal((await call('admin/guests/'+guest.slug,{name:'Maria e família',seats:1,phone:''},'PUT')).status,400);
+ assert.equal((await call('rsvp',{slug:guest.slug,answer:'no',people:4,note:'Não poderemos ir'},undefined,false)).status,200);
+ let state=(await call('admin')).data;assert.equal(state.responses.length,1);assert.equal(state.responses[0].people,0);assert.equal(state.responses[0].name,'Maria e família');assert.equal(state.summary.no,1);
+ await call('rsvp',{slug:guest.slug,answer:'yes',people:3,note:'Obrigado'},undefined,false);
+ await call('admin/guests/'+guest.slug+'/sent',{});state=(await call('admin')).data;assert.equal(state.summary.people,3);assert.equal(state.summary.sent,1);
+ const config=state.config;config.gifts=[{id:'gift-1',name:'Lua de mel',description:'Uma viagem feliz',value:150,emoji:'🌙',photo:'',link:'https://mpago.la/teste',status:'available',free:false},{id:'free-1',name:'Contribuir com o valor que quiser',description:'',value:0,emoji:'💚',link:'https://link.mercadopago.com.br/casal',status:'available',free:true}];
+ assert.equal((await call('admin',{config})).status,200);
+ assert.equal((await call('admin',{config:{...config,payment:'https://evil.example/pagar'}})).status,400);
+ const intent=await call('contributions',{giftId:'gift-1',slug:guest.slug,amount:1},undefined,false);assert.equal(intent.status,200);assert.ok(intent.data.returnUrl.includes('/obrigado/'));assert.equal((await call('thanks/'+intent.data.token,undefined,undefined,false)).data.amount,15000);
+ const other=await call('contributions',{giftId:'gift-1',slug:guest.slug},undefined,false);
+ assert.equal((await call('admin/contributions/'+intent.data.id,{status:'approved',amount:150},'PUT')).status,200);
+ assert.equal((await call('admin/contributions/'+other.data.id,{status:'approved',amount:150},'PUT')).status,400);
+ assert.equal((await call('contributions',{giftId:'gift-1',slug:guest.slug},undefined,false)).status,409);
+ const publicConfig=(await call('config')).data;assert.equal(publicConfig.gifts[0].status,'received');assert.ok(!JSON.stringify(publicConfig).includes('password_hash'));
+ const free=await call('contributions',{giftId:'free-1',slug:guest.slug,amount:87.5},undefined,false);assert.equal(free.status,200);await call('admin/contributions/'+free.data.id,{status:'approved',amount:87.5},'PUT');state=(await call('admin')).data;assert.equal(state.summary.received,237.5);
+ const source=await readFile(new URL('../app.js',import.meta.url),'utf8');assert.ok(source.includes('guestFeatures.mountRsvp(guest)'));assert.ok(source.includes('Já ganhamos este presente, obrigado!'));
+ for(const path of ['/','/convite/'+guest.slug,'/convite/invalido','/obrigado/'+intent.data.token,'/admin','/admin.js','/guest-features.js'])assert.equal((await fetch(base+path)).status,200);
+ assert.equal((await fetch(base+'/data/wedding.sqlite')).status,404);
+ const oldCookie=cookie;await call('auth/logout',{});cookie=oldCookie;assert.equal((await call('admin')).status,401);cookie='';assert.equal((await call('auth/login',{username:'noivos',password:'errada'})).status,401);assert.equal((await call('auth/login',{username:'noivos',password:'senha-segura-teste'})).status,200);
+ await new Promise(r=>app.server.close(r));app.db.close();app=await createApp({directory,root:directory,env});await new Promise(r=>app.server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+app.server.address().port;
+ state=(await call('admin')).data;assert.equal(state.summary.people,3);assert.equal(state.summary.received,237.5);assert.equal(state.guests[0].slug,guest.slug);
+ assert.equal((await call('admin/guests/'+guest.slug,undefined,'DELETE')).status,200);assert.equal((await call('guest/'+guest.slug)).data,null);assert.equal((await call('admin')).data.responses.length,0);assert.equal((await call('admin')).data.summary.received,237.5);
+});

@@ -1,0 +1,74 @@
+[
+  {
+    "width": 320,
+    "height": 568,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 360,
+    "height": 640,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 430,
+    "height": 932,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "portal": "OK",
+    "longName": "OK",
+    "horizontalOverflow": false,
+    "gifts": "OK",
+    "rsvpDialog": "OK"
+  }
+]
