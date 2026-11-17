@@ -17,17 +17,17 @@ export async function apiRoute({db,req,res,path,body,origin,secure,ip,env}){
  }
 
  if(path==='/api/config'&&method==='GET')return (await getConfig(db));
- if(path==='/api/auth/status'&&method==='GET')return {authenticated:isAdmin(db,req),setupRequired:!(await db.prepare('SELECT id FROM administrators').get())};
+ if(path==='/api/auth/status'&&method==='GET'){const users=await db.prepare('SELECT id FROM admin_users').all();return {authenticated:await isAdmin(db,req),setupRequired:users.length===0,canCreateAccount:users.length<3,remainingAccounts:3-users.length};}
  if(path==='/api/auth/setup'&&method==='POST'){
   if((await db.prepare('SELECT id FROM administrators').get()))fail('O painel já foi configurado.',409);
   if(await limited(db,'setup:'+ip,5))fail('Muitas tentativas. Aguarde 15 minutos.',429);
   if(!env.SETUP_KEY||digest(String(body.setupKey||''))!==digest(env.SETUP_KEY))fail('Código de configuração inválido.',403);
   const username=text(body.username,100,true).toLowerCase(),password=text(body.password,200,true);if(password.length<12)fail('Use uma senha com pelo menos 12 caracteres.');
-  (await db.prepare('INSERT INTO administrators VALUES(1,?,?)').run(username,hashPassword(password)));await createSession(db,res,secure);return {ok:true};
+  await transaction(db,async()=>{const users=await db.prepare('SELECT id FROM admin_users').all();if(users.length>=3)fail('O limite de tr?s acessos j? foi atingido.',409);if(await db.prepare('SELECT id FROM admin_users WHERE username=?').get(username))fail('Este usu?rio j? existe. Escolha outro nome.',409);const id=[1,2,3].find(id=>!users.some(user=>user.id===id));await db.prepare('INSERT INTO admin_users VALUES(?,?,?)').run(id,username,hashPassword(password));});await createSession(db,res,secure);return {ok:true};
  }
  if(path==='/api/auth/login'&&method==='POST'){
   if(await limited(db,'login:'+ip,10))fail('Muitas tentativas. Aguarde 15 minutos.',429);
-  const user=(await db.prepare('SELECT * FROM administrators WHERE id=1').get());const valid=user&&checkPassword(String(body.password||'').slice(0,201),user.password_hash)&&user.username===String(body.username||'').trim().toLowerCase();if(!valid)fail('Usuário ou senha incorretos.',401);await createSession(db,res,secure);return {ok:true};
+  const user=(await db.prepare('SELECT * FROM admin_users WHERE username=?').get(String(body.username||'').trim().toLowerCase()));const valid=user&&checkPassword(String(body.password||'').slice(0,201),user.password_hash)&&user.username===String(body.username||'').trim().toLowerCase();if(!valid)fail('Usuário ou senha incorretos.',401);await createSession(db,res,secure);return {ok:true};
  }
  if(path==='/api/auth/logout'&&method==='POST'){(await db.prepare('DELETE FROM sessions WHERE hash=?').run(digest(cookieToken(req))));res.setHeader('Set-Cookie',`wedding_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure?'; Secure':''}`);return {ok:true}}
  if(path.startsWith('/api/guest/')&&method==='GET'){

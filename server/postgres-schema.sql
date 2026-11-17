@@ -6,3 +6,7 @@ CREATE TABLE IF NOT EXISTS sessions (hash TEXT PRIMARY KEY,expires BIGINT NOT NU
 CREATE TABLE IF NOT EXISTS attempts (key TEXT PRIMARY KEY,count INTEGER NOT NULL,expires BIGINT NOT NULL);
 CREATE TABLE IF NOT EXISTS contributions (id TEXT PRIMARY KEY,guest_slug TEXT,guest_name TEXT NOT NULL,gift_id TEXT NOT NULL,gift_name TEXT NOT NULL,amount INTEGER NOT NULL CHECK(amount>0),status TEXT NOT NULL CHECK(status IN ('pending','approved','cancelled')),return_hash TEXT NOT NULL UNIQUE,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS uploads (name TEXT PRIMARY KEY,type TEXT NOT NULL,bytes BYTEA NOT NULL);
+
+CREATE TABLE IF NOT EXISTS admin_users (id INTEGER PRIMARY KEY CHECK(id BETWEEN 1 AND 3),username TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL);
+INSERT INTO admin_users(id,username,password_hash) SELECT id,username,password_hash FROM administrators ON CONFLICT DO NOTHING;
+DELETE FROM administrators;

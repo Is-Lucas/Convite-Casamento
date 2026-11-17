@@ -1,4 +1,4 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -13,13 +13,13 @@ test('SQLite, authentication, personalized RSVP, gifts and persistence',async t=
  await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));let base='http://127.0.0.1:'+app.server.address().port;let cookie='';
  t.after(async()=>{await new Promise(r=>app.server.close(r));app.db.close();await rm(directory,{recursive:true,force:true})});
  async function call(path,body,method,auth=true,origin=base){const r=await fetch(base+'/api/'+path,{method:method||(body?'POST':'GET'),headers:{...(body?{'Content-Type':'application/json'}:{}),Origin:origin,...(auth&&cookie?{Cookie:cookie}:{})},...(body?{body:JSON.stringify(body)}:{})});const data=await r.json();if(r.headers.get('set-cookie'))cookie=r.headers.get('set-cookie').split(';')[0];return {status:r.status,data}}
- assert.equal((await call('admin')).status,401);
+ assert.equal((await call('admin')).status,401);assert.equal((await call('auth/status')).data.authenticated,false);
  assert.equal((await fetch(base+'/api/admin',{headers:{'oai-authenticated-user-email':'preview@localhost'}})).status,401);
  assert.equal((await call('auth/setup',{setupKey:'bad',username:'noivos',password:'senha-segura-teste'})).status,403);
  assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'noivos',password:'senha-segura-teste'},undefined,true,'https://evil.example')).status,403);
  assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'noivos',password:'senha-segura-teste'})).status,200);
- assert.ok(cookie.startsWith('wedding_session='));
- assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'other',password:'senha-segura-teste'})).status,409);
+ assert.ok(cookie.startsWith('wedding_session='));assert.equal((await call('auth/status')).data.authenticated,true);
+ assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'other',password:'senha-segura-teste'})).status,200);assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'terceiro',password:'senha-segura-teste'})).status,200);assert.equal((await call('auth/setup',{setupKey:env.SETUP_KEY,username:'quarto',password:'senha-segura-teste'})).status,409);assert.equal((await call('auth/status')).data.canCreateAccount,false);
  const guest=(await call('admin/guests',{name:'Maria e família',seats:4,phone:'5511999999999'})).data;assert.ok(/^maria-e-familia-[a-f0-9]{20}$/.test(guest.slug));
  assert.equal((await call('guest/'+guest.slug,undefined,undefined,false)).data.name,'Maria e família');assert.equal((await call('guest/inexistente')).data,null);
  assert.equal((await call('rsvp',{slug:guest.slug,answer:'yes',people:5,note:''},undefined,false)).status,400);

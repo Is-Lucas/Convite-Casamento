@@ -172,3 +172,10 @@ Os testes cobrem autenticação e revogação de sessão, proteção de origem, 
 A inspeção visual em navegador não foi executada neste ambiente. A marcação e os estilos existentes do convite foram preservados; os estilos novos atendem somente campos funcionais e painel. Recomenda-se realizar o teste no celular descrito no passo de publicação antes do envio geral.
 
 Referências oficiais consultadas: [SQLite no Node.js](https://nodejs.org/download/release/latest-v24.x/docs/api/sqlite.html), [hospedagem Node no Render](https://render.com/docs/deploy-node-express-app), [disco persistente no Render](https://render.com/docs/disks), [Link de pagamento Mercado Pago](https://www.mercadopago.com.br/ferramentas-para-vender/link-de-pagamento), [Seu Link Mercado Pago](https://www.mercadopago.com.br/blog/seu-link).
+
+
+## At? tr?s acessos dos noivos
+
+O painel permite at? tr?s usu?rios com senhas independentes, todos com as mesmas permiss?es administrativas. O primeiro ? criado na tela de primeiro acesso. Para cadastrar o segundo ou terceiro, saia do painel e escolha **Criar outro acesso** na tela de login. Cada cadastro exige o c?digo secreto de configura??o, al?m de um nome de usu?rio ?nico e uma senha de pelo menos 12 caracteres. Ao completar tr?s usu?rios, o cadastro ? bloqueado pelo servidor.
+
+Mantenha `SETUP_KEY` configurado at? terminar os cadastros. O limite ? de tr?s acessos no total, incluindo o primeiro. As contas antigas da vers?o anterior s?o migradas automaticamente para o novo formato. Para recuperar uma senha espec?fica, execute `npm run reset-password -- NOME_DO_USUARIO` no terminal do servidor.

@@ -11,6 +11,9 @@ export function openDatabase(directory, root) {
  CREATE TABLE IF NOT EXISTS guests (slug TEXT PRIMARY KEY,name TEXT NOT NULL,seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 50),phone TEXT NOT NULL DEFAULT '',sent_at TEXT,created_at TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS rsvps (slug TEXT PRIMARY KEY REFERENCES guests(slug) ON DELETE CASCADE,answer TEXT NOT NULL CHECK(answer IN ('yes','no')),people INTEGER NOT NULL CHECK(people BETWEEN 0 AND 50),note TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS administrators (id INTEGER PRIMARY KEY CHECK(id=1),username TEXT NOT NULL,password_hash TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS admin_users (id INTEGER PRIMARY KEY CHECK(id BETWEEN 1 AND 3),username TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL);
+ INSERT OR IGNORE INTO admin_users(id,username,password_hash) SELECT id,username,password_hash FROM administrators;
+ DELETE FROM administrators;
  CREATE TABLE IF NOT EXISTS sessions (hash TEXT PRIMARY KEY,expires INTEGER NOT NULL);
  CREATE TABLE IF NOT EXISTS attempts (key TEXT PRIMARY KEY,count INTEGER NOT NULL,expires INTEGER NOT NULL);
  CREATE TABLE IF NOT EXISTS contributions (id TEXT PRIMARY KEY,guest_slug TEXT,guest_name TEXT NOT NULL,gift_id TEXT NOT NULL,gift_name TEXT NOT NULL,amount INTEGER NOT NULL CHECK(amount>0),status TEXT NOT NULL CHECK(status IN ('pending','approved','cancelled')),return_hash TEXT NOT NULL UNIQUE,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
