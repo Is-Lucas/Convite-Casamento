@@ -23,7 +23,7 @@ export async function openPostgres(connectionString,root){
  try{
   const schema=await readFile(new URL('./postgres-schema.sql',import.meta.url),'utf8');await pool.query(schema);
   const config=structuredClone(initial);
-  for(const folder of ['casal','rancho']){let names=[];try{names=await readdir(join(root,'imagens',folder))}catch{}const photos=names.filter(n=>/\.(jpe?g|png|webp)$/i.test(n)).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true})).map(name=>({url:'/imagens/'+folder+'/'+encodeURIComponent(name),alt:folder==='casal'?'Luisa e Gabriel':'Ambiente do Rancho Sempre Viva'}));if(photos.length){if(folder==='casal'){config.heroPhoto=photos[0].url;config.couplePhotos=photos}else config.photos=photos}}
+  for(const folder of ['casal','rancho']){let names=[];try{names=await readdir(join(root,'imagens',folder))}catch{}const photos=names.filter(n=>/\.(jpe?g|png|webp)$/i.test(n)&&!/(logo|assinatura|signature|brasao|referencia)/i.test(n)).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true})).map(name=>({url:'/imagens/'+folder+'/'+encodeURIComponent(name),alt:folder==='casal'?'Luisa e Gabriel':'Ambiente do Rancho Sempre Viva'}));if(photos.length){if(folder==='casal'){config.heroPhoto=photos[0].url;config.couplePhotos=photos}else config.photos=photos}}
   config.gifts=config.gifts.map(g=>({...g,id:randomUUID(),description:g.description||'',status:'available',free:false}));config.gifts.push({id:randomUUID(),name:'Contribuir com o valor que quiser',description:'Um carinho para a nossa vida a dois.',value:0,emoji:'💚',photo:'',link:'',free:true,status:'available'});
   await pool.query('INSERT INTO settings(id,json) VALUES(1,$1) ON CONFLICT(id) DO NOTHING',[JSON.stringify(config)]);
   return createPostgresAdapter(pool);

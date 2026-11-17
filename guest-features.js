@@ -27,3 +27,8 @@ export function fitGuestName(){
  const fit=()=>{name.style.fontSize='';letter.style.gap='';let size=parseFloat(getComputedStyle(name).fontSize);const fits=()=>{const bounds=letter.getBoundingClientRect();return [...letter.children].every(child=>{const r=child.getBoundingClientRect();return r.top>=bounds.top+2&&r.bottom<=bounds.bottom-2&&r.width<=bounds.width})};if(!fits())letter.style.gap='8px';while(size>16&&!fits()){size-=1;name.style.fontSize=size+'px'}};
  const observer=new ResizeObserver(fit);observer.observe(letter);document.fonts.ready.then(fit);fit();
 }
+
+export async function applyLogoVariants(){
+ const images=[...document.querySelectorAll('.brand-crest,.seal-crest')];images.forEach(img=>{img.onerror=()=>{img.style.visibility='hidden'}});
+ try{const identity=await request('identity');const logo=identity.black||identity.green;if(logo)images.forEach(img=>{img.onload=()=>{img.style.visibility='visible'};img.src=logo});else images.forEach(img=>img.style.visibility='hidden')}catch{}
+}

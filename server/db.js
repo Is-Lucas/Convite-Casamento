@@ -21,7 +21,7 @@ export function openDatabase(directory, root) {
   if(existsSync(legacy))try{old=new Map(JSON.parse(readFileSync(legacy,'utf8')));const state=old.get('state.json');if(state)config=JSON.parse(state).config;}catch{}
   for(const folder of ['casal','rancho']){
    const base=join(root,'imagens',folder);if(!existsSync(base))continue;
-   const photos=readdirSync(base).filter(n=>/\.(jpe?g|png|webp)$/i.test(n)).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true})).map(n=>({url:'/imagens/'+folder+'/'+encodeURIComponent(n),alt:folder==='casal'?'Luisa e Gabriel':'Ambiente do Rancho Sempre Viva'}));
+   const photos=readdirSync(base).filter(n=>/\.(jpe?g|png|webp)$/i.test(n)&&!/(logo|assinatura|signature|brasao|referencia)/i.test(n)).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true})).map(n=>({url:'/imagens/'+folder+'/'+encodeURIComponent(n),alt:folder==='casal'?'Luisa e Gabriel':'Ambiente do Rancho Sempre Viva'}));
    if(photos.length){if(folder==='casal'){config.heroPhoto=photos[0].url;config.couplePhotos=photos;}else config.photos=photos;}
   }
   config.gifts=(config.gifts||[]).map(g=>({...g,id:g.id||randomUUID(),description:g.description||'',status:g.status||'available',free:!!g.free}));

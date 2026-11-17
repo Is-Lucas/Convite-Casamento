@@ -1,3 +1,4 @@
+import {readdir} from 'node:fs/promises';
 import { randomBytes,randomUUID } from 'node:crypto';
 import { getConfig,setConfig,transaction } from './db.js';
 import { isAdmin,hashPassword,checkPassword,createSession,cookieToken,digest,limited } from './auth.js';
@@ -10,6 +11,11 @@ function validateConfig(c){if(!c||typeof c!=='object')fail('Configuração invá
 export async function adminState(db){const guests=(await db.prepare('SELECT * FROM guests ORDER BY created_at,slug').all());const responses=(await db.prepare('SELECT r.*,g.name,r.updated_at AS date FROM rsvps r JOIN guests g ON g.slug=r.slug').all());const contributions=(await db.prepare('SELECT id,guest_name,gift_id,gift_name,amount,status,created_at,updated_at FROM contributions ORDER BY created_at DESC').all());const status=new Map(responses.map(r=>[r.slug,r]));return {config:(await getConfig(db)),guests,responses,contributions,summary:{invites:guests.length,sent:guests.filter(g=>g.sent_at).length,yes:responses.filter(r=>r.answer==='yes').length,no:responses.filter(r=>r.answer==='no').length,pending:guests.filter(g=>!status.has(g.slug)).length,people:responses.reduce((n,r)=>n+r.people,0),received:contributions.filter(c=>c.status==='approved').reduce((n,c)=>n+c.amount,0)/100}}}
 export async function apiRoute({db,req,res,path,body,origin,secure,ip,env}){
  const method=req.method;
+ if(path==='/api/identity'&&method==='GET'){
+  const names=await readdir(new URL('../imagens/casal/',import.meta.url));const identity={};
+  for(const name of names){if(!/^logo/i.test(name)||!/\.(png|jpe?g|webp)$/i.test(name))continue;const key=/preta|preto|black/i.test(name)?'black':/branca|branco|white/i.test(name)?'white':'green';identity[key]='/imagens/casal/'+encodeURIComponent(name)}return identity;
+ }
+
  if(path==='/api/config'&&method==='GET')return (await getConfig(db));
  if(path==='/api/auth/status'&&method==='GET')return {authenticated:isAdmin(db,req),setupRequired:!(await db.prepare('SELECT id FROM administrators').get())};
  if(path==='/api/auth/setup'&&method==='POST'){
